@@ -29,6 +29,9 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::fromROSMsg (*input, cloud);
 
+
+
+ 
   // Data containers used
   // Create the filtering object: downsample the dataset using a leaf size of 1cm
   pcl::VoxelGrid<pcl::PointXYZ> vg;
@@ -41,45 +44,38 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   // Creating the KdTree object for the search method of the extraction
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
   tree->setInputCloud (cloud_filtered);
-  pcl::PassThrough<pcl::PointXYZ> pass;
-  /*
-  pass.setInputCloud (cloud_filtered);
-  pass.setFilterFieldName("x");
-  pass.setFilterLimits(2,5);
-  pass.setFilterFieldName("y");
-  pass.setFilterLimits(-1,2);
-  pass.setFilterFieldName("z");
-  pass.setFilterLimits(-1.0,5);
-  pass.filter(*cloud_filtered);
-  */
-
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  
+  pcl::PassThrough<pcl::PointXYZ> pass; 
+
+
+
+
   pass.setInputCloud (cloud_filtered);
-  pass.setFilterFieldName ("x");
-  pass.setFilterLimits(0, 10);
+  pass.setFilterFieldName("x");
+  pass.setFilterLimits(0,8);
   pass.filter(*cloud_filtered);
-  
+ 
   pass.setInputCloud (cloud_filtered);
   pass.setFilterFieldName("y");
-  pass.setFilterLimits(-2.3,2.3);
+  pass.setFilterLimits(-3.5,3.5);
   pass.filter(*cloud_filtered);
-  
-  pass.setInputCloud (cloud_filtered);
-  pass.setFilterFieldName("z");
-  pass.setFilterLimits(-0.5, 2.3);
-  pass.filter(*cloud_filtered);
-  //pass.setFilterFieldName("z");
-  //pass.setFilterLimits(-0.3,0.3);
 
-  ec.setClusterTolerance (0.5); // 4cm
-  ec.setMinClusterSize (8);
-  ec.setMaxClusterSize (170);
+  pass.setInputCloud (cloud_filtered);
+  pass.setFilterFieldName("z"); //장애물이 차인경우 Z max수정
+  pass.setFilterLimits(-0.6,0);
+  pass.filter(*cloud_filtered);
+
+
+  ec.setClusterTolerance (0.8); // 80cm
+  ec.setMinClusterSize (3);
+  ec.setMaxClusterSize (2000);  //3~2000
   ec.setSearchMethod (tree);
   ec.setInputCloud (cloud_filtered);
   ec.extract (cluster_indices);
  
+
+
 
   std::cout << "Number of clusters is equal to " << cluster_indices.size () << std::endl;
  
